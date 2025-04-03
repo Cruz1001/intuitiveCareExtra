@@ -5,3 +5,4 @@ tabula
 fastapi
 pydantic
 uvicorn
+sqlalchemy
