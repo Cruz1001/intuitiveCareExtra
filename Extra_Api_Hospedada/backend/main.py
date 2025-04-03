@@ -10,8 +10,6 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
-static_path = os.path.join(os.path.dirname(__file__), "dist")
-app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuração do banco de dados
+
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://intuitivedb_user:gU2YjyStnGMOwbZkaroPW1WZxETqgMio@dpg-cvnd5jripnbc73aungg0-a.oregon-postgres.render.com/intuitivedb"
@@ -29,6 +27,7 @@ DATABASE_URL = os.getenv(
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
 
 class OperadoraDB(Base):
     __tablename__ = "operadoras"
@@ -56,6 +55,7 @@ class OperadoraDB(Base):
 
 Base.metadata.create_all(bind=engine)
 
+
 class Operadora(BaseModel):
     Registro_ANS: str
     CNPJ: str | None = None
@@ -78,17 +78,26 @@ class Operadora(BaseModel):
     Regiao_de_Comercializacao: str | None = None
     Data_Registro_ANS: str | None = None
 
+
 def get_db():
     db = SessionLocal()
+    print("📡 Conectando ao banco de dados...")
     try:
         yield db
     finally:
         db.close()
 
 @app.get("/buscar-operadoras", response_model=List[Operadora])
-async def buscar_operadoras(query: str = Query("", min_length=0), db: Session = Depends(get_db)):
+async def buscar_operadoras(
+    query: str = Query("", min_length=0), db: Session = Depends(get_db)
+):
+    print(" Endpoint /buscar-operadoras foi chamado!")  # Log para testar
     operadoras = db.query(OperadoraDB).filter(OperadoraDB.Nome_Fantasia.ilike(f"%{query}%")).all() if query else db.query(OperadoraDB).all()
+    
+    print(f" Encontradas {len(operadoras)} operadoras.")  # Log para testar o banco
+    
     return [Operadora(**op.__dict__) for op in operadoras]
+
 
 def importar_csv():
     csv_path = os.path.join(os.path.dirname(__file__), "..", "arquivos", "Relatorio_cadop.csv")
@@ -125,6 +134,7 @@ def importar_csv():
     finally:
         db.close()
 
+
 @app.post("/importar-csv")
 async def importar_operadoras():
     try:
@@ -134,3 +144,9 @@ async def importar_operadoras():
         raise HTTPException(status_code=404, detail="Arquivo CSV não encontrado.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+static_path = os.path.join(os.path.dirname(__file__), "dist")
+if os.path.exists(static_path):
+    app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
+else:
+    print(" A pasta 'dist' não foi encontrada! Não será possível servir o frontend.")
