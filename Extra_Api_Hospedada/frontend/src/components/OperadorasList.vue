@@ -71,7 +71,8 @@ export default {
   methods: {
     async buscarOperadoras() {
       try {
-        const response = await axios.get('http://<public-ip>:8000/buscar-operadoras?query=${this.query}');
+        console.log(`URL chamada: https://intuitivecareextra.onrender.com/buscar-operadoras?query=${this.query}`);
+        const response = await axios.get('https://intuitivecareextra.onrender.com/buscar-operadoras?query=${this.query}');
         this.operadoras = response.data;
       } catch (error) {
         console.error('Erro ao buscar operadoras:', error);
