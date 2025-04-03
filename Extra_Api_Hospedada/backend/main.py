@@ -81,7 +81,7 @@ class Operadora(BaseModel):
 
 def get_db():
     db = SessionLocal()
-    print("📡 Conectando ao banco de dados...")
+    print(" Conectando ao banco de dados...")
     try:
         yield db
     finally:
