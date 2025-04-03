@@ -2,14 +2,13 @@ from fastapi import FastAPI, Query, Depends, HTTPException
 from typing import List
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, String
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import csv
 from fastapi.staticfiles import StaticFiles
 
-# Configuração do FastAPI
 app = FastAPI()
 
 static_path = os.path.join(os.path.dirname(__file__), "dist")
@@ -23,13 +22,13 @@ app.add_middleware(
     allow_headers=["*"],  
 )
 
-# Configuração do Banco de Dados
+
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://intuitivedb_user:gU2YjyStnGMOwbZkaroPW1WZxETqgMio@dpg-cvnd5jripnbc73aungg0-a.oregon-postgres.render.com/intuitivedb")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Modelo do Banco de Dados
+
 class OperadoraDB(Base):
     __tablename__ = "operadoras"
     Registro_ANS = Column(String, primary_key=True)
@@ -55,7 +54,6 @@ class OperadoraDB(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# Modelo Pydantic
 class Operadora(BaseModel):
     Registro_ANS: str
     CNPJ: str
@@ -85,7 +83,7 @@ def get_db():
     finally:
         db.close()
 
-# Rota para buscar operadoras
+
 @app.get("/buscar-operadoras", response_model=List[Operadora])
 async def buscar_operadoras(query: str = Query("", min_length=0), db: Session = Depends(get_db)):
     if query:
@@ -94,7 +92,7 @@ async def buscar_operadoras(query: str = Query("", min_length=0), db: Session = 
         operadoras = db.query(OperadoraDB).all()
     return [Operadora(**op.__dict__) for op in operadoras]
 
-# Função para importar o CSV
+
 def importar_csv():
     csv_path = os.path.join(os.path.dirname(__file__), "arquivos", "Relatorio_cadop.csv")
 
