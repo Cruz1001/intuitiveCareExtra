@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 app = FastAPI()
 
 static_path = os.path.join(os.path.dirname(__file__), "dist")
-app.mount("/static", StaticFiles(directory=static_path, html=True), name="static")
+app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,
