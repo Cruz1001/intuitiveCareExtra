@@ -2,8 +2,7 @@ from fastapi import FastAPI, Query, Depends, HTTPException
 from typing import List
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, String
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import csv
@@ -12,69 +11,72 @@ from fastapi.staticfiles import StaticFiles
 app = FastAPI()
 
 static_path = os.path.join(os.path.dirname(__file__), "dist")
-app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
+app.mount("/static", StaticFiles(directory=static_path, html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"], 
-    allow_headers=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://intuitivedb_user:gU2YjyStnGMOwbZkaroPW1WZxETqgMio@dpg-cvnd5jripnbc73aungg0-a.oregon-postgres.render.com/intuitivedb")
+# Configuração do banco de dados
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://intuitivedb_user:gU2YjyStnGMOwbZkaroPW1WZxETqgMio@dpg-cvnd5jripnbc73aungg0-a.oregon-postgres.render.com/intuitivedb"
+)
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-
 class OperadoraDB(Base):
     __tablename__ = "operadoras"
+    
     Registro_ANS = Column(String, primary_key=True)
-    CNPJ = Column(String)
-    Razao_Social = Column(String)
-    Nome_Fantasia = Column(String)
-    Modalidade = Column(String)
-    Logradouro = Column(String)
-    Numero = Column(String)
-    Complemento = Column(String)
-    Bairro = Column(String)
-    Cidade = Column(String)
-    UF = Column(String)
-    CEP = Column(String)
-    DDD = Column(String)
-    Telefone = Column(String)
-    Fax = Column(String)
-    Endereco_eletronico = Column(String)
-    Representante = Column(String)
-    Cargo_Representante = Column(String)
-    Regiao_de_Comercializacao = Column(String)
-    Data_Registro_ANS = Column(String)
+    CNPJ = Column(String, nullable=True)
+    Razao_Social = Column(String, nullable=True)
+    Nome_Fantasia = Column(String, nullable=True)
+    Modalidade = Column(String, nullable=True)
+    Logradouro = Column(String, nullable=True)
+    Numero = Column(String, nullable=True)
+    Complemento = Column(String, nullable=True)
+    Bairro = Column(String, nullable=True)
+    Cidade = Column(String, nullable=True)
+    UF = Column(String, nullable=True)
+    CEP = Column(String, nullable=True)
+    DDD = Column(String, nullable=True)
+    Telefone = Column(String, nullable=True)
+    Fax = Column(String, nullable=True)
+    Endereco_eletronico = Column(String, nullable=True)
+    Representante = Column(String, nullable=True)
+    Cargo_Representante = Column(String, nullable=True)
+    Regiao_de_Comercializacao = Column(String, nullable=True)
+    Data_Registro_ANS = Column(String, nullable=True)
 
 Base.metadata.create_all(bind=engine)
 
 class Operadora(BaseModel):
     Registro_ANS: str
-    CNPJ: str
-    Razao_Social: str
-    Nome_Fantasia: str
-    Modalidade: str
-    Logradouro: str
-    Numero: str
-    Complemento: str
-    Bairro: str
-    Cidade: str
-    UF: str
-    CEP: str
-    DDD: str
-    Telefone: str
-    Fax: str
-    Endereco_eletronico: str
-    Representante: str
-    Cargo_Representante: str
-    Regiao_de_Comercializacao: str
-    Data_Registro_ANS: str
+    CNPJ: str | None = None
+    Razao_Social: str | None = None
+    Nome_Fantasia: str | None = None
+    Modalidade: str | None = None
+    Logradouro: str | None = None
+    Numero: str | None = None
+    Complemento: str | None = None
+    Bairro: str | None = None
+    Cidade: str | None = None
+    UF: str | None = None
+    CEP: str | None = None
+    DDD: str | None = None
+    Telefone: str | None = None
+    Fax: str | None = None
+    Endereco_eletronico: str | None = None
+    Representante: str | None = None
+    Cargo_Representante: str | None = None
+    Regiao_de_Comercializacao: str | None = None
+    Data_Registro_ANS: str | None = None
 
 def get_db():
     db = SessionLocal()
@@ -83,30 +85,29 @@ def get_db():
     finally:
         db.close()
 
-
 @app.get("/buscar-operadoras", response_model=List[Operadora])
 async def buscar_operadoras(query: str = Query("", min_length=0), db: Session = Depends(get_db)):
-    if query:
-        operadoras = db.query(OperadoraDB).filter(OperadoraDB.Nome_Fantasia.ilike(f"%{query}%")).all()
-    else:
-        operadoras = db.query(OperadoraDB).all()
+    operadoras = db.query(OperadoraDB).filter(OperadoraDB.Nome_Fantasia.ilike(f"%{query}%")).all() if query else db.query(OperadoraDB).all()
     return [Operadora(**op.__dict__) for op in operadoras]
 
-
 def importar_csv():
-    csv_path = os.path.join(os.path.dirname(__file__), "arquivos", "Relatorio_cadop.csv")
-
+    csv_path = os.path.join(os.path.dirname(__file__), "..", "arquivos", "Relatorio_cadop.csv")
     if not os.path.exists(csv_path):
-        raise FileNotFoundError("Arquivo CSV não encontrado na pasta 'arquivos'.")
-
-    db = SessionLocal()
+        raise FileNotFoundError("Arquivo CSV não encontrado.")
     
+    db = SessionLocal()
     try:
         with open(csv_path, "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            next(reader)  # Pular cabeçalho
+            reader = csv.reader(f, delimiter=";")  
+            next(reader, None)
 
             for row in reader:
+                if not row or all(cell.strip() == "" for cell in row): 
+                    continue
+                
+                while len(row) < 20:
+                    row.append(None)
+                
                 operadora = OperadoraDB(
                     Registro_ANS=row[0], CNPJ=row[1], Razao_Social=row[2],
                     Nome_Fantasia=row[3], Modalidade=row[4], Logradouro=row[5],
@@ -117,7 +118,6 @@ def importar_csv():
                     Data_Registro_ANS=row[19]
                 )
                 db.add(operadora)
-
         db.commit()
     except Exception as e:
         db.rollback()
@@ -125,7 +125,6 @@ def importar_csv():
     finally:
         db.close()
 
-# Rota para importar CSV
 @app.post("/importar-csv")
 async def importar_operadoras():
     try:
