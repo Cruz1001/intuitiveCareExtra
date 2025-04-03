@@ -6,9 +6,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi.middleware.cors import CORSMiddleware
 import os
+from fastapi.staticfiles import StaticFiles
 
 # Configuração do FastAPI
 app = FastAPI()
+
+app.mount("/", StaticFiles(directory="dist", html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,13 +21,11 @@ app.add_middleware(
     allow_headers=["*"],  
 )
 
-# Configuração do Banco de Dados
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://usuario:senha@host:porta/nome_do_banco")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Modelo do Banco de Dados
 class OperadoraDB(Base):
     __tablename__ = "operadoras"
     Registro_ANS = Column(String, primary_key=True)
@@ -80,7 +81,6 @@ def get_db():
     finally:
         db.close()
 
-# Endpoint para buscar operadoras
 @app.get("/buscar-operadoras", response_model=List[Operadora])
 async def buscar_operadoras(query: str = Query("", min_length=0), db: Session = Depends(get_db)):
     """Retorna uma lista de operadoras filtradas pelo Nome Fantasia."""
@@ -89,3 +89,5 @@ async def buscar_operadoras(query: str = Query("", min_length=0), db: Session = 
     else:
         operadoras = db.query(OperadoraDB).all()
     return [Operadora(**op.__dict__) for op in operadoras]
+
+app.mount("/", StaticFiles(directory="dist", html=True), name="static")
