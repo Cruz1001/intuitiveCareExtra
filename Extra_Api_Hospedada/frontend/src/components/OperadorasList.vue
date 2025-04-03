@@ -85,19 +85,63 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos para melhorar a visualização da tabela */
+h1 {
+  color: #333;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+input {
+  padding: 10px;
+  font-size: 16px;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  font-style: italic;
+  color: #aaa;
+}
+
+input:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
 table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 20px;
 }
 
 th, td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 12px 15px;
   text-align: left;
+  font-size: 14px;
 }
 
 th {
   background-color: #f4f4f4;
+  color: #333;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #e0f7fa;
+  cursor: pointer;
+}
+
+p {
+  font-size: 16px;
+  color: #888;
+  font-style: italic;
 }
 </style>
