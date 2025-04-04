@@ -17,3 +17,4 @@ Este projeto é uma adaptação do repositório original do teste Intuitive Care
 Basta acessar o Link:
 https://intuitivecareextra.onrender.com/
 
+ ⚠️O site e os dados podem demorar um pouco para serem exibidos devido a hospedagem ser gratuita.⚠️
